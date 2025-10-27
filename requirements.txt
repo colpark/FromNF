@@ -1,0 +1,18 @@
+# Core dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.24.0
+einops>=0.6.1
+
+# Visualization
+matplotlib>=3.7.0
+tqdm>=4.65.0
+
+# Jupyter
+jupyter>=1.0.0
+ipykernel>=6.23.0
+ipywidgets>=8.0.0
+
+# Optional but recommended
+scipy>=1.10.0
+pillow>=9.5.0
