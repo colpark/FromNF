@@ -1,6 +1,10 @@
-# Sparsity-Aware Diffusion Model
+# Sparsity-Aware Generative Models
 
-A PyTorch implementation of a novel sparsity-aware diffusion model that learns to reconstruct full images from sparse observations.
+PyTorch implementations of sparsity-aware generative models that learn to reconstruct full images from sparse observations.
+
+**Two Approaches**:
+- **v1**: Diffusion Model (DDPM) - 1000 steps, stable training
+- **v2**: Flow Matching - 10-100 steps, faster sampling, ODE/SDE support
 
 ## 🎯 Key Innovation
 
@@ -57,10 +61,16 @@ This approach enables the model to learn complete image distributions from parti
    - Multi-resolution processing with attention
    - Time-conditioned residual blocks
 
-3. **Gaussian Diffusion**:
+3. **Gaussian Diffusion (v1)**:
    - 1000-step diffusion process
    - Weighted loss: 1.0 on target pixels, 0.05 on conditioning pixels
    - DDPM sampling with clipping
+
+4. **Flow Matching (v2)**:
+   - Velocity field prediction instead of noise
+   - 10-100 step sampling (10-100x faster!)
+   - ODE solver (deterministic) and SDE solver (stochastic)
+   - Straighter probability paths via optimal transport
 
 ## 📊 CIFAR-10 Results
 
@@ -79,13 +89,24 @@ pip install -r requirements.txt
 
 ### Training
 
-Open and run the Jupyter notebook:
-
+**Option 1: Diffusion Model (v1)**
 ```bash
 jupyter notebook sparsity_diffusion_cifar10.ipynb
 ```
+- Traditional DDPM approach
+- 1000 sampling steps
+- Proven stability
 
-The notebook is self-contained and includes:
+**Option 2: Flow Matching (v2)** ⚡ **Recommended**
+```bash
+jupyter notebook sparsity_flow_matching_cifar10_v2.ipynb
+```
+- Modern flow matching approach
+- 10-100 sampling steps (10-100x faster!)
+- Both ODE (deterministic) and SDE (stochastic) samplers
+- Comparable quality with faster inference
+
+Both notebooks are self-contained and include:
 - ✅ All model architectures
 - ✅ Training loop with progress bars
 - ✅ Visualization utilities
@@ -108,17 +129,45 @@ SPARSITY = 0.2           # 20% sparsity level
 
 ```
 FromNF/
-├── sparsity_diffusion_cifar10.ipynb  # Main training notebook
-├── ref/                               # Reference implementations
-│   ├── diffusion (8) (1).py          # Original diffusion code
-│   ├── model_original (7) (1).py     # Original U-Net model
-│   └── trainer (6) (1).py            # Original trainer
-├── results/                           # Generated samples (created during training)
-├── checkpoints/                       # Model checkpoints (created during training)
-├── data/                              # CIFAR-10 dataset (auto-downloaded)
-├── README.md                          # This file
-└── requirements.txt                   # Python dependencies
+├── sparsity_diffusion_cifar10.ipynb        # v1: Diffusion model (DDPM)
+├── sparsity_flow_matching_cifar10_v2.ipynb # v2: Flow matching (⚡ faster)
+├── ref/                                     # Reference implementations
+│   ├── diffusion (8) (1).py                # Original diffusion code
+│   ├── model_original (7) (1).py           # Original U-Net model
+│   └── trainer (6) (1).py                  # Original trainer
+├── results/                                 # v1 generated samples
+├── results_v2/                              # v2 generated samples
+├── checkpoints/                             # v1 model checkpoints
+├── checkpoints_v2/                          # v2 model checkpoints
+├── data/                                    # CIFAR-10 dataset (auto-downloaded)
+├── README.md                                # This file
+└── requirements.txt                         # Python dependencies
 ```
+
+## ⚡ v1 (Diffusion) vs v2 (Flow Matching)
+
+| Feature | v1: Diffusion | v2: Flow Matching |
+|---------|---------------|-------------------|
+| **Approach** | Noise prediction (DDPM) | Velocity prediction |
+| **Training** | Predict noise ε | Predict velocity v_t |
+| **Sampling Steps** | 1000 | 10-100 |
+| **Speed** | Baseline | **10-100x faster** |
+| **Sampling** | DDPM only | ODE (deterministic) + SDE (stochastic) |
+| **Path** | Brownian motion | Optimal transport (straighter) |
+| **Quality** | High | Comparable |
+| **Best For** | Proven stability | Fast inference, flexibility |
+
+### Key Equations
+
+**v1 (Diffusion)**:
+- Forward: `x_t = √(ᾱ_t) x_0 + √(1-ᾱ_t) ε`
+- Training: `L = ||ε - ε_θ(x_t, t)||²`
+- Sampling: Reverse diffusion (1000 steps)
+
+**v2 (Flow Matching)**:
+- Forward: `x_t = t·x_1 + (1-t)·x_0`
+- Training: `L = ||v_θ(x_t, t) - (x_1 - x_0)||²`
+- Sampling: ODE/SDE integration (10-100 steps)
 
 ## 🔬 How It Works
 
@@ -224,11 +273,22 @@ If you use this code, please cite:
 ## 🤝 Contributing
 
 Contributions are welcome! Areas for improvement:
+
+**v1 (Diffusion)**:
 - [ ] DDIM sampler for faster inference
+- [ ] Classifier-free guidance
+
+**v2 (Flow Matching)**:
+- [ ] Minibatch optimal transport
+- [ ] Higher-order ODE solvers (RK4 is implemented)
+- [ ] Rectified flows
+
+**Both**:
 - [ ] Multi-scale training
 - [ ] Conditional generation by class
 - [ ] FID score evaluation
 - [ ] Wandb integration
+- [ ] Comparison benchmarks
 
 ## 📄 License
 
@@ -239,6 +299,8 @@ MIT License - see LICENSE file for details
 Based on:
 - **DDPM**: Denoising Diffusion Probabilistic Models (Ho et al., 2020)
 - **DDIM**: Denoising Diffusion Implicit Models (Song et al., 2021)
+- **Flow Matching**: Flow Matching for Generative Modeling (Lipman et al., 2023)
+- **Optimal Transport**: Simulation-Free Schrödinger Bridges via Score and Flow Matching (Tong et al., 2023)
 - Original reference implementation in `ref/` directory
 
 ---
